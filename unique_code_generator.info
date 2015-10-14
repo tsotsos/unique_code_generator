@@ -1,0 +1,3 @@
+name = Unique code generator
+description = Generates and stores to database unique code, created by criteria.
+core = 7.x
