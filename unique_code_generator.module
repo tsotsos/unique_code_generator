@@ -1,1 +1,129 @@
 <?php
+/**
+ * @file
+ * Defines an example shipping method for testing and development.
+ */
+
+/**
+ * Implements hook_permission().
+ *
+ * Defines new permissions for administrating and crating codes
+ */
+function unique_code_generator_permission() {
+  return array(
+    'administer unique code generator' => array(
+      'title' => t('Administer unique code generator'),
+      'description' => t('Allows to use administration interface for Unique code generator'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function unique_code_generator_menu($items)
+{
+$items = array ();
+  $items['admin/config/content/settings/unique_code_generator'] = array(
+    'title' => 'Unique Code Generator',
+    'page callback' => 'unique_code_generator_settings',
+    'access arguments' => array(
+      'administer unique code generator'
+    ),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 1,
+  );
+  return $items;
+}
+function unique_code_generator_settings(){
+$id = unique_code_generator_Random();
+  $output = array ('first_para' => array(
+      '#type' => 'markup',
+      '#markup' => '<p>A paragraph about some stuff...</p>'.$id,
+    ),
+    'form' => drupal_get_form('unique_code_generator_settings_form'),
+    );
+    return $output;
+}
+/*
+ * Get Token Types
+ */
+function unique_code_generator_get_tokens(){
+  $tokens =  token_get_info();
+  $types = array();
+  foreach ($tokens['tokens'] as $token_type => $value){
+    array_push($types,$token_type);
+  }
+  return $types;
+}
+/*
+ * unique_code_generator_Random
+ * Generates a random string given the length.
+ */
+function unique_code_generator_Random($length = 10) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $charactersLength = strlen($characters);
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
+    }
+    return $randomString;
+}
+/*
+ * Unique code generator settings form
+ */
+function unique_code_generator_settings_form ($form,&$form_state){
+  $form = array();
+  $form['settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Random options') ,
+    '#collapsible' => TRUE,
+    '#description' => t('Select any options for your random generated string') ,
+  );
+  $form['settings']['before_string'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Content before string') ,
+    '#default_value' =>'',
+  );
+  $form['settings']['after_string'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Content after string') ,
+    '#default_value' =>'',
+  );
+   $form['settings']['token_help'] = array(
+      '#theme' => 'token_tree_link',
+      '#token_types' => unique_code_generator_get_tokens(),
+    );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
+  $form['random_string'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Auto generated string') ,
+    '#default_value' =>'',
+    '#prefix' => '<div id="wrapper-gen">',
+    '#suffix' => '</div>',
+  );
+  $form['generate'] = array(
+    '#type'  => 'button',
+    '#name'  => 'Generate',
+    '#value' => t('Generate!'),
+    '#ajax'  => array(
+      'callback' => 'unique_code_generator_settings_callback',
+      'wrapper'  => 'wrapper-gen',
+      'method'   => 'replace',
+      'effect'   => 'fade',
+      'event' => 'click',
+    ),
+  );
+  return $form;
+}
+function unique_code_generator_settings_callback($form, &$form_state){
+  $form['random_string']['#value']= "1112s";
+  return ($form['random_string']);
+}
+function unique_code_generator_settings_form_submit($form, &$form_state){
+  debug($form_state);
+drupal_set_message("TEst");
+}

@@ -11,6 +11,11 @@ function unique_code_generator_schema() {
   $schema = array();
   $schema['unique_code_generator'] = array(
     'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
       'code' => array(
         'type' => 'varchar',
         'length' => 255,
@@ -23,12 +28,13 @@ function unique_code_generator_schema() {
         'description' => 'User id',
       ) ,
       'created' => array(
-        'mysql_type' => 'timestamp',
+        'type' => 'int',
         'not null ' => TRUE,
+        'default' => 0,
       ) ,
     ),
     'primary key' => array(
-      'code',
+      'id',
     ),
   );
   return $schema;
