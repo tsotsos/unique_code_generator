@@ -175,7 +175,7 @@ function unique_points_codes_form($form, &$form_state) {
       'sort' => 'desc'
     ) ,
     array(
-      'data' => t('User Id') ,
+      'data' => t('Creator') ,
       'field' => 'uid',
       'sort' => 'desc'
     ) ,
@@ -195,8 +195,6 @@ function unique_points_codes_form($form, &$form_state) {
     'uid',
     'created'
   ));
-  $query->join('unique_points', 'un', 'ug.id = un.cid');
-  $query->fields('un',array('used'));
   $table_sort = $query->extend('TableSort') 
   ->orderByHeader($header);
   $pager = $table_sort->extend('PagerDefault')->limit(25);
@@ -205,7 +203,7 @@ function unique_points_codes_form($form, &$form_state) {
   
   foreach ($result as $res) {
     $user = user_load($res->uid);
-    $used = ($res->used == 1) ? t('Used'):t('Available');
+    $used = (unique_points_check_used($res->code) == TRUE) ? t('Used'):t('Available');
     $rows[$res->id] = array(
       $res->id,
       $res->code,
