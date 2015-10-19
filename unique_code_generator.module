@@ -127,13 +127,23 @@ function unique_code_generator_Random($type = 0, $case = 'mix', $length = 10) {
   else return $randomString;
 }
 /*
- * Checks for equal value
+ * Checks for value
 */
 
 function db_equal($field, $value) {
   $record = db_select('unique_code_generator', 'c')->fields('c', array(
     $field
   ))->condition($field, $value, '=')->execute()->fetchAssoc();
+  return $record;
+}
+/*
+ * Checks for value
+*/
+
+function db_check_code($value) {
+  $record = db_select('unique_code_generator', 'c')->fields('c', array('uid'))
+  ->condition('code', $value, '=')->execute()
+  ->fetchAssoc();
   return $record;
 }
 /*

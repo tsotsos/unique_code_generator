@@ -3,43 +3,173 @@
  * @file
  * Defines points - unique code generator settings
  */
-
 /**
  * Implements hook_permission().
  *
  * Defines new permissions for administrating and crating codes
  */
+
 function unique_points_permission() {
   return array(
     'administer unique points' => array(
-      'title' => t('Administer unique code generator points'),
-      'description' => t('Allows to administer points integration with unique code generator'),
-    ),
+      'title' => t('Administer unique code generator points') ,
+      'description' => t('Allows to administer points integration with unique code generator') ,
+    ) ,
+    'use unique codes' => array(
+      'title' => t('Use unique codes') ,
+      'description' => t('Allows use to use a code') ,
+    ) ,
   );
 }
-
 /**
  * Implements hook_menu().
  */
-function unique_points_menu($items){
-$items = array ();
+
+function unique_points_menu($items) {
+  $items = array();
   $items['admin/config/content/settings/unique_code_generator/points'] = array(
-    'title' => t('Points'),
-    'description' => t('Settings for Unique Code Generator Points'),
+    'title' => t('Points') ,
+    'description' => t('Settings for Unique Code Generator Points') ,
     'page callback' => 'unique_points_settings',
     'access arguments' => array(
       'administer unique points'
-    ),  
+    ) ,
     'type' => MENU_LOCAL_TASK,
+    'weight' => 3,
+  );
+  $items['unique_points/redeem_code'] = array(
+    'title' => 'Redeem code',
+    'page callback' => 'unique_points_redeem',
+    'access arguments' => array(
+      'use unique codes'
+    ) ,
+    'access callback' => TRUE,
     'weight' => 3,
   );
   return $items;
 }
 
-function unique_points_settings(){
-  $output = array (
-    '#markup' => '<p>TEST</p>',
-    );
-    return $output;
+function unique_points_settings() {
+  $output = array(
+    'form' => drupal_get_form('unique_points_supervisors_form') ,
+  );
+  return $output;
 }
-?>
+
+function unique_points_redeem() {
+  $output = array(
+    'form' => drupal_get_form('unique_points_redeem_form') ,
+  );
+  return $output;
+}
+
+function unique_points_supervisors_form($form, &$form_state) {
+  $form = array();
+  $users = entity_load('user');
+  $form['default_points'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Default Points') ,
+    '#default_value' => 1000,
+  );
+  
+  foreach ($users as $u) {
+    
+    if (user_access('create unique codes', $u)) {
+      $points = ( unique_points_get_supervisor_points($u->uid) != FALSE) ?unique_points_get_supervisor_points($u->uid) :NULL;
+      $form['points_user_' . $u->uid] = array(
+        '#type' => 'textfield',
+        '#title' => t('Points for <i> @supervisor\'s</i> users', array(
+          '@supervisor' => $u->name
+        )) ,
+        '#default_value'=>$points,
+      );
+    }
+  }
+  $form['save'] = array(
+    '#type' => 'submit',
+    '#name' => 'save',
+    '#value' => t('Save') ,
+  );
+  return $form;
+}
+
+function unique_points_supervisors_form_submit($form, &$form_state) {
+  debug($form_state['values']);
+    
+  foreach ($form_state['values'] as $key => $value) {
+    
+    if (strpos($key, 'points_user_') !== false) {
+      $uid = explode('points_user_', $key) [1];
+      
+      if (($uid != NULL) && (unique_points_search_supervisor($uid) !== false)) {
+        unique_points_update_supervisor($uid,$value);
+        continue;
+      }
+      else {
+        unique_points_insert_supervisor($uid, $value);
+      }
+    }
+  }
+  drupal_set_message(t('All settings was saved!'));
+}
+
+function unique_points_redeem_form($form, &$form_state) {
+  $form = array();
+  $form['username'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Type your username') ,
+  );
+  $form['code'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Enter your Code to redeem') ,
+  );
+  $form['redeem'] = array(
+    '#type' => 'submit',
+    '#name' => 'redeem',
+    '#value' => t('Redeem') ,
+  );
+  return $form;
+}
+
+function unique_points_redeem_form_submit($form, &$form_state) {
+  $username = isset($form_state['values']['username']) ? check_plain($form_state['values']['username']) : NULL;
+  $code = isset($form_state['values']['code']) ? check_plain($form_state['values']['code']) : NULL;
+  $user = user_load_by_name($username);
+  
+  if (($user != FALSE)) {
+    
+    if (db_check_code($code) != FALSE) {
+      $supervisor = db_check_code($code) ['uid'];
+      if (unique_points_get_supervisor_points($supervisor) != FALSE){
+        userpoints_userpointsapi(array('uid'=>$user->uid, 'points'=>unique_points_get_supervisor_points($supervisor),'description'=>t('Redeemed Code:@code',array('@code'=>$code))));
+      }
+    }
+  }
+}
+
+function unique_points_search_supervisor($uid) {
+  $record = db_select('unique_points_supervisor', 'un')->fields('un', array(
+    'supervisor'
+  ))->condition('supervisor', $uid, '=')->execute()->fetchField();
+  return $record;
+}
+
+function unique_points_get_supervisor_points($uid) {
+  $record = db_select('unique_points_supervisor', 'un')->fields('un', array(
+    'points'
+  ))->condition('supervisor', $uid, '=')->execute()->fetchField();
+  return $record;
+}
+
+function unique_points_insert_supervisor($uid, $points) {
+  db_insert('unique_points_supervisor')->fields(array(
+    'supervisor' => $uid,
+    'points' => intval($points) ,
+  ))->execute();
+}
+
+function unique_points_update_supervisor($uid, $points) {
+  db_update('unique_points_supervisor')->fields(array(
+    'points' => $points,
+  ))->condition('supervisor', $uid, '=')->execute();
+}
