@@ -30,7 +30,19 @@ function unique_points_menu($items) {
   $items['admin/config/content/settings/unique_code_generator/points'] = array(
     'title' => t('Points') ,
     'description' => t('Settings for Unique Code Generator Points') ,
-    'page callback' => 'unique_points_settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => 'unique_points_supervisors_form',
+    'access arguments' => array(
+      'administer unique points'
+    ) ,
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 3,
+  );
+  $items['admin/config/content/settings/unique_code_generator/unique_codes'] = array(
+    'title' => t('Points codes') ,
+    'description' => t('Settings for Unique Code Generator Points') ,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('unique_points_codes_form'),
     'access arguments' => array(
       'administer unique points'
     ) ,
@@ -39,7 +51,8 @@ function unique_points_menu($items) {
   );
   $items['unique_points/redeem_code'] = array(
     'title' => 'Redeem code',
-    'page callback' => 'unique_points_redeem',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => 'unique_points_redeem_form',
     'access arguments' => array(
       'use unique codes'
     ) ,
@@ -49,39 +62,56 @@ function unique_points_menu($items) {
   return $items;
 }
 
-function unique_points_settings() {
-  $output = array(
-    'form' => drupal_get_form('unique_points_supervisors_form') ,
-  );
-  return $output;
-}
-
-function unique_points_redeem() {
-  $output = array(
-    'form' => drupal_get_form('unique_points_redeem_form') ,
-  );
-  return $output;
+function unique_points_captcha_types($add_special_options = TRUE) {
+  $captcha_types = array();
+  
+  if ($add_special_options) {
+    $captcha_types['none'] = t('- No challenge -');
+    $captcha_types['default'] = t('Default challenge type');
+  }
+  foreach (module_implements('captcha') as $module) {
+    $result = call_user_func_array($module . '_captcha', array(
+      'list'
+    ));
+    
+    if (is_array($result)) {
+      
+      foreach ($result as $type) {
+        $captcha_types["$module/$type"] = t('@type (from module @module)', array(
+          '@type' => $type,
+          '@module' => $module
+        ));
+      }
+    }
+  }
+  return $captcha_types;
 }
 
 function unique_points_supervisors_form($form, &$form_state) {
   $form = array();
   $users = entity_load('user');
+  $unique_settings = variable_get('unique_points');
+  $form['captcha_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Select Captcha Type') ,
+    '#options' => unique_points_captcha_types() ,
+    '#default_value' => $unique_settings['captcha_type'],
+  );
   $form['default_points'] = array(
     '#type' => 'textfield',
     '#title' => t('Default Points') ,
-    '#default_value' => 1000,
+    '#default_value' => $unique_settings['default_points'],
   );
-  
   foreach ($users as $u) {
     
     if (user_access('create unique codes', $u)) {
-      $points = ( unique_points_get_supervisor_points($u->uid) != FALSE) ?unique_points_get_supervisor_points($u->uid) :NULL;
+      $points = (unique_points_get_supervisor_points($u->uid) != FALSE) ? unique_points_get_supervisor_points($u->uid) : NULL;
       $form['points_user_' . $u->uid] = array(
         '#type' => 'textfield',
         '#title' => t('Points for <i> @supervisor\'s</i> users', array(
           '@supervisor' => $u->name
         )) ,
-        '#default_value'=>$points,
+        '#default_value' => $points,
       );
     }
   }
@@ -94,15 +124,14 @@ function unique_points_supervisors_form($form, &$form_state) {
 }
 
 function unique_points_supervisors_form_submit($form, &$form_state) {
-  debug($form_state['values']);
-    
+  
   foreach ($form_state['values'] as $key => $value) {
     
     if (strpos($key, 'points_user_') !== false) {
       $uid = explode('points_user_', $key) [1];
       
       if (($uid != NULL) && (unique_points_search_supervisor($uid) !== false)) {
-        unique_points_update_supervisor($uid,$value);
+        unique_points_update_supervisor($uid, $value);
         continue;
       }
       else {
@@ -110,11 +139,92 @@ function unique_points_supervisors_form_submit($form, &$form_state) {
       }
     }
   }
+  $default_points = isset($form_state['values']['default_points']) ? $form_state['values']['default_points'] : 1000;
+  $captcha_type = isset($form_state['values']['captcha_type']) ? $form_state['values']['captcha_type'] : 'none';
+  variable_set('unique_points', array(
+    'default_points' => $default_points,
+    'captcha_type' => $captcha_type
+  ));
   drupal_set_message(t('All settings was saved!'));
+}
+function unique_points_codes_form($form, &$form_state) {
+  $form = array();
+  $form = array();
+  global $user;
+  $header = array(
+    array(
+      'data' => t('Id') ,
+      'field' => 'id',
+      'sort' => 'desc'
+    ) ,
+    array(
+      'data' => t('Code') ,
+      'field' => 'code',
+      'sort' => 'desc'
+    ) ,
+    array(
+      'data' => t('User Id') ,
+      'field' => 'uid',
+      'sort' => 'desc'
+    ) ,
+    array(
+      'data' => t('Used') ,
+      'field' => 'used',
+      'sort' => 'desc'
+    ) ,
+    array(
+      'data' => t('Created datetime') ,
+      'field' => 'created'
+    ) ,
+  );
+  $query = db_select('unique_code_generator', 'ug')->fields('ug', array(
+    'id',
+    'code',
+    'uid',
+    'created'
+  ));
+  $query->join('unique_points', 'un', 'ug.id = un.cid');
+  $query->fields('un',array('used'));
+  $table_sort = $query->extend('TableSort') 
+  ->orderByHeader($header);
+  $pager = $table_sort->extend('PagerDefault')->limit(25);
+  $result = $pager->execute();
+  $rows = array();
+  
+  foreach ($result as $res) {
+    $user = user_load($res->uid);
+    debug($res->used);
+    $used = ($res->used == 1) ? t('Used'):t('Available');
+    $rows[$res->id] = array(
+      $res->id,
+      $res->code,
+      $user->name,
+      $used ,
+      format_date($res->created, 'custom', 'D j M Y - H:m')
+    );
+  }
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#name' => 'submit',
+    '#value' => t('Delete') ,
+    '#suffix' => '<p>' . t('Select checkboxes and delete them') . '</p>',
+  );
+  $form['table'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $rows,
+    '#empty' => t('No campground to claim') ,
+  );
+  $form['pager'] = array(
+    '#markup' => theme('pager')
+  );
+  return $form;
 }
 
 function unique_points_redeem_form($form, &$form_state) {
   $form = array();
+  $unique_settings = variable_get('unique_points');
+  $captcha_type = $unique_settings['captcha_type'];
   $form['username'] = array(
     '#type' => 'textfield',
     '#title' => t('Type your username') ,
@@ -123,6 +233,13 @@ function unique_points_redeem_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Enter your Code to redeem') ,
   );
+  
+  if ($captcha_type != 'none') {
+    $form['captcha'] = array(
+      '#type' => 'captcha',
+      '#captcha_type' => $captcha_type,
+    );
+  }
   $form['redeem'] = array(
     '#type' => 'submit',
     '#name' => 'redeem',
@@ -138,12 +255,50 @@ function unique_points_redeem_form_submit($form, &$form_state) {
   
   if (($user != FALSE)) {
     
-    if (db_check_code($code) != FALSE) {
-      $supervisor = db_check_code($code) ['uid'];
-      if (unique_points_get_supervisor_points($supervisor) != FALSE){
-        userpoints_userpointsapi(array('uid'=>$user->uid, 'points'=>unique_points_get_supervisor_points($supervisor),'description'=>t('Redeemed Code:@code',array('@code'=>$code))));
+    if (unique_code_generator_db_check_code($code) != FALSE) {
+      $supervisor = unique_code_generator_db_check_code($code) ['uid'];
+      $used = unique_points_check_used($code);
+      $unique_settings = variable_get('unique_points');
+      $default_points = $unique_settings['default_points'];
+      $points = (unique_points_get_supervisor_points($supervisor) != FALSE) ? unique_points_get_supervisor_points($supervisor) : $default_points;
+      
+      if ((unique_points_get_supervisor_points($supervisor) != FALSE) && ($used == false)) {
+        userpoints_userpointsapi(array(
+          'uid' => $user->uid,
+          'points' => unique_points_get_supervisor_points($supervisor) ,
+          'description' => t('Redeemed Code:@code', array(
+            '@code' => $code
+          ))
+        ));
+        unique_points_insert_used($code, $user->uid, 1);
+      }
+      else 
+      if ($used == TRUE) {
+        drupal_set_message(t('This code has been used already') , 'warning');
+      }
+      else {
+        drupal_set_message(t('An unexpected error occurred, please try later or contact with your site administrator') , 'warning');
+        watchdog('warning', t('Couldn\'t insert the code to points table'));
       }
     }
+    else 
+    if (unique_code_generator_db_check_code($code) == FALSE) {
+      drupal_set_message(t('Your code does not exist, please be check your code and try again') , 'warning');
+    }
+    else {
+      drupal_set_message(t('An unexpected error occurred, please try later or contact with your site administrator') , 'warning');
+      watchdog('warning', t('Couldn\'t verify the code'));
+    }
+  }
+  else 
+  if ($user == FALSE) {
+    drupal_set_message(t('The user @user does not exist', array(
+      '@user' => $username
+    )) , 'warning');
+  }
+  else {
+    drupal_set_message(t('An unexpected error occurred, please try later or contact with your site administrator') , 'warning');
+    watchdog('warning', t('Invalid code tried'));
   }
 }
 
@@ -172,4 +327,37 @@ function unique_points_update_supervisor($uid, $points) {
   db_update('unique_points_supervisor')->fields(array(
     'points' => $points,
   ))->condition('supervisor', $uid, '=')->execute();
+}
+
+function unique_points_check_used($code) {
+  $q = db_select('unique_points', 'un')->fields('un', array(
+    'cid'
+  ));
+  $q->join('unique_code_generator', 'ug', 'un.cid = ug.id');
+  $q->condition('ug.code', $code);
+  $result = $q->execute()->fetchField();
+  return $result;
+}
+function unique_points_fetch_all() {
+  $q = db_select('unique_points', 'un')->fields('un', array(
+    'cid','uid','used'
+  ));
+  $q->join('unique_code_generator', 'ug', 'un.cid = ug.id');
+  $q->fields('ug',array('code'));
+  $result = $q->execute()->fetchAll();
+  return $result;
+}
+
+function unique_points_insert_used($code, $uid, $used) {
+  $cid = unique_code_generator_db_get_id($code);
+  if ($code != FALSE) {
+    db_insert('unique_points')->fields(array(
+      'cid' => $cid,
+      'uid' => $uid,
+      'used' => $used,
+    ))->execute();
+  }
+  else {
+    return FALSE;
+  }
 }
