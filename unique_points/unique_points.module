@@ -1,0 +1,45 @@
+<?php
+/**
+ * @file
+ * Defines points - unique code generator settings
+ */
+
+/**
+ * Implements hook_permission().
+ *
+ * Defines new permissions for administrating and crating codes
+ */
+function unique_points_permission() {
+  return array(
+    'administer unique points' => array(
+      'title' => t('Administer unique code generator points'),
+      'description' => t('Allows to administer points integration with unique code generator'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function unique_points_menu($items){
+$items = array ();
+  $items['admin/config/content/settings/unique_code_generator/points'] = array(
+    'title' => t('Points'),
+    'description' => t('Settings for Unique Code Generator Points'),
+    'page callback' => 'unique_points_settings',
+    'access arguments' => array(
+      'administer unique points'
+    ),  
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 3,
+  );
+  return $items;
+}
+
+function unique_points_settings(){
+  $output = array (
+    '#markup' => '<p>TEST</p>',
+    );
+    return $output;
+}
+?>

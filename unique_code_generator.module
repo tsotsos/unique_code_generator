@@ -1,140 +1,160 @@
 <?php
 /**
  * @file
- * Defines an example shipping method for testing and development.
+ * Defines unique code generator settings and forms.
  */
-
 /**
  * Implements hook_permission().
  *
  * Defines new permissions for administrating and crating codes
  */
+
 function unique_code_generator_permission() {
   return array(
     'administer unique code generator' => array(
-      'title' => t('Administer unique code generator'),
-      'description' => t('Allows to use administration interface for Unique code generator'),
-    ),
+      'title' => t('Administer unique code generator') ,
+      'description' => t('Allows to use administration interface for Unique code generator') ,
+    ) ,
+    'create unique codes' => array(
+      'title' => t('Create unique codes') ,
+      'description' => t('Allows the user to create codes') ,
+    ) ,
   );
 }
-
 /**
  * Implements hook_menu().
  */
-function unique_code_generator_menu($items)
-{
-$items = array ();
+
+function unique_code_generator_menu($items) {
+  $items = array();
   $items['admin/config/content/settings/unique_code_generator'] = array(
-    'title' => 'Unique Code Generator',
+    'title' => t('Unique Code Generator') ,
+    'description' => t('Settings for Unique Code Generator') ,
     'page callback' => 'unique_code_generator_settings',
     'access arguments' => array(
       'administer unique code generator'
-    ),
+    ) ,
+    'access_callback' => TRUE,
     'type' => MENU_NORMAL_ITEM,
-    'weight' => 1,
+    'weight' => 0,
   );
-  $items['unique_generator/create'] = array(
-    'title' => 'Unique Code Generator',
-    'page callback' => 'unique_code_generator_creator',
+  $items['admin/config/content/settings/unique_code_generator/edit'] = array(
+    'title' => t('Settings') ,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+  $items['admin/config/content/settings/unique_code_generator/codes'] = array(
+    'title' => t('Created codes') ,
+    'page callback' => 'unique_code_generator_codes',
     'access arguments' => array(
       'administer unique code generator'
-    ),
-    'type' => MENU_NORMAL_ITEM,
+    ) ,
+    'type' => MENU_LOCAL_TASK,
     'weight' => 1,
+  );
+  $items['user/%user/unique_generator/create'] = array(
+    'title' => 'Unique Code Generator',
+    'page callback' => 'unique_code_generator_creator',
+    'page arguments' => array(
+      1
+    ) ,
+    'access arguments' => array(
+      'create unique codes'
+    ) ,
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 0,
   );
   return $items;
 }
-function unique_code_generator_settings(){
-$id0 = unique_code_generator_Random(0,'mix',10);
-$id1 = unique_code_generator_Random(1,'mix',10);
-$id2 = unique_code_generator_Random(2,'mix',10);
-$id3 = unique_code_generator_Random(3,'mix',10);
-$id4 = unique_code_generator_Random(0,'low',10);
-$id5 = unique_code_generator_Random(2,'up',10);
 
-  $output = array ('first_para' => array(
-      '#type' => 'markup',
-      '#markup' => '<p>'.$id1.'</p>'.'<p>'.$id2.'</p>'.'<p>'.$id3.'</p>'.'<p>'.$id4.'</p>'.'<p>'.$id5.'</p>',
-    ),
-    'form' => drupal_get_form('unique_code_generator_settings_form'),
-    );
-    return $output;
+function unique_code_generator_settings() {
+  $output = array(
+    'form' => drupal_get_form('unique_code_generator_settings_form') ,
+  );
+  return $output;
 }
-function unique_code_generator_creator(){
 
-  $output = array (
-    'form' => drupal_get_form('unique_code_generator_creator_form'),
-    );
-    return $output;
+function unique_code_generator_creator() {
+  $output = array(
+    'form' => drupal_get_form('unique_code_generator_creator_form') ,
+  );
+  return $output;
+}
+
+function unique_code_generator_codes() {
+  $output = array(
+    'form' => drupal_get_form('unique_code_generator_edit_codes_form') ,
+  );
+  return $output;
 }
 /*
- * Get Token Types - Unused 
- */
-function unique_code_generator_get_tokens(){
-  $tokens =  token_get_info();
+ * Get Token Types - Unused
+*/
+
+function unique_code_generator_get_tokens() {
+  $tokens = token_get_info();
   $types = array();
-  foreach ($tokens['tokens'] as $token_type => $value){
-    array_push($types,$token_type);
+  
+  foreach ($tokens['tokens'] as $token_type => $value) {
+    array_push($types, $token_type);
   }
   return $types;
 }
 /*
  * unique_code_generator_Random
  * Generates a random string given the length.
- */
-function unique_code_generator_Random($type = 0,$case = 'mix', $length = 10) {
-  if ($type == 0)
-    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_-+=\\":><?/}{][.,~`';
-  else if ($type == 1)
-    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  else if ($type == 2)
-    $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  else if ($type == 3)
-     $characters = '0123456789';
-     
-    $charactersLength = strlen($characters);
-    $randomString = '';
-    for ($i = 0; $i < $length; $i++) {
-        $randomString .= $characters[rand(0, $charactersLength - 1)];
-    }
-    if ($case == 'low')
-      return strtolower($randomString);
-    else if ($case == 'up')
-      return strtoupper($randomString);
-    else
-      return $randomString;
+*/
+
+function unique_code_generator_Random($type = 0, $case = 'mix', $length = 10) {
+  
+  if ($type == 0) $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_-+=\\":><?/}{][.,~`';
+  else 
+  if ($type == 1) $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  else 
+  if ($type == 2) $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  else 
+  if ($type == 3) $characters = '0123456789';
+  $charactersLength = strlen($characters);
+  $randomString = '';
+  
+  for ($i = 0;$i < $length;$i++) {
+    $randomString.= $characters[rand(0, $charactersLength - 1) ];
+  }
+  
+  if ($case == 'low') return strtolower($randomString);
+  else 
+  if ($case == 'up') return strtoupper($randomString);
+  else return $randomString;
 }
 /*
  * Checks for equal value
- */
-function db_equal($field, $value){
-  $record = db_select('unique_code_generator', 'c')
-  ->fields('c', array($field))
-  ->condition($field,$value,'=')
-  ->execute()
-  ->fetchAssoc();
+*/
+
+function db_equal($field, $value) {
+  $record = db_select('unique_code_generator', 'c')->fields('c', array(
+    $field
+  ))->condition($field, $value, '=')->execute()->fetchAssoc();
   return $record;
 }
 /*
  * Saves a key value
- */
-function db_save($user, $value){
+*/
+
+function db_save($user, $value) {
   db_insert('unique_code_generator') // Table name no longer needs {}
   ->fields(array(
-  'code' => $value,
-  'uid' => $user->uid,
-  'created' => REQUEST_TIME,
-  ))
-  ->execute();
+    'code' => $value,
+    'uid' => $user->uid,
+    'created' => REQUEST_TIME,
+  ))->execute();
 }
-
 /*
  * Unique code generator settings form
- */
-function unique_code_generator_settings_form ($form,&$form_state){
+*/
+
+function unique_code_generator_settings_form($form, &$form_state) {
   $form = array();
-  $d = variable_get('unique_code_generator');
-  debug($d);
+  $settings = variable_get('unique_code_generator');
   $form['settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Random options') ,
@@ -143,39 +163,39 @@ function unique_code_generator_settings_form ($form,&$form_state){
   );
   $form['settings']['options'] = array(
     '#type' => 'radios',
-    '#title' => t('String character options'),
+    '#title' => t('String character options') ,
     '#options' => array(
-        0=>t('Letters, numbers and symbols'),
-        1=>t('Letters and numbers'),
-        2=> t('Letters only'),
-        3=>t('Numbers only'),
-    ),
-    '#default_value' =>'',
+      0 => t('Letters, numbers and symbols') ,
+      1 => t('Letters and numbers') ,
+      2 => t('Letters only') ,
+      3 => t('Numbers only') ,
+    ) ,
+    '#default_value' => $settings['characters'],
   );
   $form['settings']['letterscase'] = array(
     '#type' => 'radios',
-    '#title' => t('Upper/Lower case'),
+    '#title' => t('Upper/Lower case') ,
     '#options' => array(
-        'mix'=>t('Mixed'),
-        'low'=>t('Lower case only'),
-        'up'=> t('Upper case only'),
-    ),
-    '#default_value' =>'mix',
+      'mix' => t('Mixed') ,
+      'low' => t('Lower case only') ,
+      'up' => t('Upper case only') ,
+    ) ,
+    '#default_value' => $settings['letterscase'],
   );
   $form['settings']['length'] = array(
     '#type' => 'textfield',
     '#title' => t('Random String length') ,
-    '#default_value' =>'10',
+    '#default_value' => '10',
   );
   $form['settings']['before_string'] = array(
     '#type' => 'textfield',
     '#title' => t('Content before string') ,
-    '#default_value' =>'',
+    '#default_value' => $settings['before_string'],
   );
   $form['settings']['after_string'] = array(
     '#type' => 'textfield',
     '#title' => t('Content after string') ,
-    '#default_value' =>'',
+    '#default_value' => $settings['after_string'],
   );
   $form['settings']['tokens'] = array(
     '#type' => 'fieldset',
@@ -184,52 +204,69 @@ function unique_code_generator_settings_form ($form,&$form_state){
     '#collapsed' => TRUE,
     '#description' => t('Select any token you want') ,
   );
-   $form['settings']['tokens']['token_help'] = array(
-      '#theme' => 'token_tree',
-      '#token_types' => array('node','user'),
-    );
+  $form['settings']['tokens']['token_help'] = array(
+    '#theme' => 'token_tree',
+    '#token_types' => array(
+      'node',
+      'user'
+    ) ,
+  );
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Save'),
+    '#value' => t('Save') ,
   );
-
   return $form;
 }
 
-function unique_code_generator_settings_form_submit($form, &$form_state){
+function unique_code_generator_settings_form_submit($form, &$form_state) {
   $settings['before_string'] = $form_state['values']['before_string'];
   $settings['after_string'] = $form_state['values']['after_string'];
   $settings['characters'] = $form_state['values']['options'];
-  $settings['letterscase'] =$form_state['values']['letterscase'];
-  $settings['length'] = $form_state['values']['length']; 
+  $settings['letterscase'] = $form_state['values']['letterscase'];
+  $settings['length'] = $form_state['values']['length'];
   variable_set('unique_code_generator', $settings);
 }
-function unique_code_generator_creator_form($form, &$form_state){
-  $settings= variable_get('unique_code_generator');
-  global $user;
-  if (strpos($settings['before_string'],'[user:') !== false ) {
 
-    $settings['before_string'] = token_replace($settings['before_string'], array('user'=>$user));
-  } else if (strpos($settings['before_string'],'[node:') !== false ) {
-    if (arg(0) == 'node')
-      $node = node_load(arg(1));
-    $settings['before_string'] = token_replace($settings['before_string'], array('node'=>$node));
-  } else {
+function unique_code_generator_creator_form($form, &$form_state) {
+  $settings = variable_get('unique_code_generator');
+  global $user;
+  
+  if (strpos($settings['before_string'], '[user:') !== false) {
+    $settings['before_string'] = token_replace($settings['before_string'], array(
+      'user' => $user
+    ));
+  }
+  else 
+  if (strpos($settings['before_string'], '[node:') !== false) {
+    
+    if (arg(0) == 'node') $node = node_load(arg(1));
+    $settings['before_string'] = token_replace($settings['before_string'], array(
+      'node' => $node
+    ));
+  }
+  else {
     $settings['before_string'] = token_replace($settings['before_string']);
   }
-  if (strpos($settings['after_string'],'[user:') !== false ) {
-    $settings['after_string'] = token_replace($settings['after_string'], array('user'=>$user));
-  } else if (strpos($settings['after_string'],'[node:') !== false ) {
-    if (arg(0) == 'node')
-      $node = node_load(arg(1));
-    $settings['after_string'] = token_replace($settings['after_string'], array('node'=>$node));
-  } else {
+  
+  if (strpos($settings['after_string'], '[user:') !== false) {
+    $settings['after_string'] = token_replace($settings['after_string'], array(
+      'user' => $user
+    ));
+  }
+  else 
+  if (strpos($settings['after_string'], '[node:') !== false) {
+    
+    if (arg(0) == 'node') $node = node_load(arg(1));
+    $settings['after_string'] = token_replace($settings['after_string'], array(
+      'node' => $node
+    ));
+  }
+  else {
     $settings['after_string'] = token_replace($settings['after_string']);
   }
-  if(empty($form_state['values']['number_of_strings']))
-    $form_state['values']['number_of_strings'] = 0;
-
-  $number = intval ($form_state['values']['number_of_strings']);
+  
+  if (empty($form_state['values']['number_of_strings'])) $form_state['values']['number_of_strings'] = 0;
+  $number = intval($form_state['values']['number_of_strings']);
   $form = array();
   $form['number_of_strings'] = array(
     '#type' => 'textfield',
@@ -242,54 +279,138 @@ function unique_code_generator_creator_form($form, &$form_state){
     '#prefix' => '<div id="wrapper-gen">',
     '#suffix' => '</div>',
   );
-  for ($i=0;$i<$number;$i++){
-    $string= unique_code_generator_Random($settings['characters'],$settings['letterscase'],$settings['length']);
-    $form['results']['result-'.$i] = array(
+  
+  for ($i = 0;$i < $number;$i++) {
+    $string = unique_code_generator_Random($settings['characters'], $settings['letterscase'], $settings['length']);
+    $form['results']['result-' . $i] = array(
       '#type' => 'textfield',
-      '#title' => t('Key No').$i,
+      '#title' => t('Key No') . $i,
       '#disabled' => FALSE,
-      '#value' =>$settings['before_string'].$string.$settings['after_string'],
+      '#value' => $settings['before_string'] . $string . $settings['after_string'],
     );
   }
   $form['generate'] = array(
-    '#type'  => 'button',
-    '#name'  => 'Generate',
-    '#value' => t('Generate!'),
-    '#ajax'  => array(
+    '#type' => 'button',
+    '#name' => 'Generate',
+    '#value' => t('Generate!') ,
+    '#ajax' => array(
       'callback' => 'unique_code_generator_creator_callback',
-      'wrapper'  => 'wrapper-gen',
-      'method'   => 'replace',
-      'effect'   => 'fade',
+      'wrapper' => 'wrapper-gen',
+      'method' => 'replace',
+      'effect' => 'fade',
       'event' => 'click',
-    ),
+    ) ,
   );
   $form['save'] = array(
     '#type' => 'submit',
-    '#name'  => 'Save',
+    '#name' => 'Save',
     '#value' => t('Save') ,
   );
-return $form;
+  return $form;
 }
-function unique_code_generator_creator_callback($form, &$form_state){
+
+function unique_code_generator_creator_callback($form, &$form_state) {
   return ($form['results']);
 }
 
-function unique_code_generator_creator_form_submit($form, &$form_state){
+function unique_code_generator_creator_form_submit($form, &$form_state) {
   $message = t("Saved Values are :");
-  $saved = "<strong>".$message."</strong><ul>";
-  if (!isset($user))
-    global $user;
-  foreach ($form_state['values'] as $key => $value){
-    if (strpos($key,'result-') !== false){
-      if (db_equal('code',$value) !==false){
+  $saved = "<strong>" . $message . "</strong><ul>";
+  
+  if (!isset($user)) global $user;
+  
+  foreach ($form_state['values'] as $key => $value) {
+    
+    if (strpos($key, 'result-') !== false) {
+      
+      if (db_equal('code', $value) !== false) {
         $i--;
         continue;
-      } else {
-        db_save($user,$value);
-        $saved .= '<li>'.$value.'</li>';
       }
-    } 
+      else {
+        db_save($user, $value);
+        $saved.= '<li>' . $value . '</li>';
+      }
+    }
   }
-  $saved .="</ul>";
+  $saved.= "</ul>";
   drupal_set_message($saved);
+}
+/**
+ * Implements hook_views_api().
+ */
+
+function unique_code_generator_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'unique_code_generator') . '/includes',
+  );
+}
+
+function unique_code_generator_edit_codes_form($form, &$form_state) {
+  $form = array();
+  global $user;
+  $header = array(
+    array(
+      'data' => t('Id') ,
+      'field' => 'id',
+      'sort' => 'desc'
+    ) ,
+    array(
+      'data' => t('Code') ,
+      'field' => 'code',
+      'sort' => 'desc'
+    ) ,
+    array(
+      'data' => t('User Id') ,
+      'field' => 'uid',
+      'sort' => 'desc'
+    ) ,
+    array(
+      'data' => t('Created datetime') ,
+      'field' => 'created'
+    ) ,
+  );
+  $query = db_select('unique_code_generator', 'c')->fields('c', array(
+    'id',
+    'code',
+    'uid',
+    'created'
+  ));
+  $table_sort = $query->extend('TableSort') // Add table sort extender.
+  ->orderByHeader($header); // Add order by headers.
+  $pager = $table_sort->extend('PagerDefault')->limit(25); // here you can limit the number of data per page.
+  $result = $pager->execute();
+  $rows = array();
+  
+  foreach ($result as $res) {
+    $user = user_load($res->uid);
+    $rows[$res->id] = array(
+      $res->id,
+      $res->code,
+      $user->name,
+      format_date($res->created, 'custom', 'D j M Y - H:m')
+    );
+  }
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#name' => 'submit',
+    '#value' => t('Delete') ,
+    '#suffix' => '<p>' . t('Select checkboxes and delete them') . '</p>',
+  );
+  $form['table'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $rows,
+    '#empty' => t('No campground to claim') ,
+  );
+  $form['pager'] = array(
+    '#markup' => theme('pager')
+  );
+  return $form;
+}
+
+function unique_code_generator_edit_codes_form_submit($form, &$form_state) {
+  $selected = array_filter($form_state['values']['table']);
+  db_delete('unique_code_generator')->condition('id', $selected, 'IN')->execute();
 }

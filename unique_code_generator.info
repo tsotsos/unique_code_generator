@@ -1,3 +1,5 @@
 name = Unique code generator
 description = Generates and stores to database unique code, created by criteria.
+package = Unique code generator
+configure = admin/config/content/settings/unique_code_generator/edit
 core = 7.x

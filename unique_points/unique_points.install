@@ -1,0 +1,65 @@
+<?php
+/**
+ * @file
+ * Unique code generator installation.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function unique_points_schema() {
+  $schema = array();
+  $schema['unique_points'] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'cid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Code ID',
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'User id',
+      ) ,
+      'used' => array(
+        'type' => 'int',
+        'not null ' => TRUE,
+        'default' => 0,
+      ) ,
+    ),
+    'primary key' => array(
+      'id',
+    ),
+  );
+  $schema['unique_points_supervisor'] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'supervisor' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'User id',
+      ) ,
+      'points' => array(
+        'type' => 'int',
+        'not null ' => TRUE,
+        'default' => 0,
+      ) ,
+    ),
+    'primary key' => array(
+      'id',
+    ),
+  );
+  return $schema;
+}
