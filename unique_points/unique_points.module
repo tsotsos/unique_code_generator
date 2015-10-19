@@ -30,8 +30,7 @@ function unique_points_menu($items) {
   $items['admin/config/content/settings/unique_code_generator/points'] = array(
     'title' => t('Points') ,
     'description' => t('Settings for Unique Code Generator Points') ,
-    'page callback' => 'drupal_get_form',
-    'page arguments' => 'unique_points_supervisors_form',
+    'page callback' => 'unique_points_settings',
     'access arguments' => array(
       'administer unique points'
     ) ,
@@ -51,8 +50,7 @@ function unique_points_menu($items) {
   );
   $items['unique_points/redeem_code'] = array(
     'title' => 'Redeem code',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => 'unique_points_redeem_form',
+    'page callback' => 'unique_points_redeem',
     'access arguments' => array(
       'use unique codes'
     ) ,
@@ -60,6 +58,20 @@ function unique_points_menu($items) {
     'weight' => 3,
   );
   return $items;
+}
+
+function unique_points_settings() {
+  $output = array(
+    'form' => drupal_get_form('unique_points_supervisors_form') ,
+  );
+  return $output;
+}
+
+function unique_points_redeem() {
+  $output = array(
+    'form' => drupal_get_form('unique_points_redeem_form') ,
+  );
+  return $output;
 }
 
 function unique_points_captcha_types($add_special_options = TRUE) {
@@ -193,7 +205,6 @@ function unique_points_codes_form($form, &$form_state) {
   
   foreach ($result as $res) {
     $user = user_load($res->uid);
-    debug($res->used);
     $used = ($res->used == 1) ? t('Used'):t('Available');
     $rows[$res->id] = array(
       $res->id,
