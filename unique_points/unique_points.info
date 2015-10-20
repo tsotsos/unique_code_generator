@@ -1,5 +1,7 @@
 name = Unique code generator - Points
 description = Integrates Unique Code Generator with Points
 package = Unique code generator
+dependencies[] = unique_code_generator
+dependencies[] = captcha
 configure = admin/config/content/settings/unique_code_generator/points
 core = 7.x
