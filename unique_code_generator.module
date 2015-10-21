@@ -53,7 +53,7 @@ function unique_code_generator_menu($items) {
     'weight' => 1,
   );
   $items['admin/config/content/settings/unique_code_generator/generate'] = array(
-    'title' => t('Generate codes'),
+    'title' => t('Generate codes') ,
     'page callback' => 'unique_code_generator_creator',
     'access arguments' => array(
       'create unique codes'
@@ -65,7 +65,8 @@ function unique_code_generator_menu($items) {
 }
 /*
  * form  caller
- */
+*/
+
 function unique_code_generator_settings() {
   $output = array(
     'form' => drupal_get_form('unique_code_generator_settings_form') ,
@@ -74,7 +75,8 @@ function unique_code_generator_settings() {
 }
 /*
  * form  caller
- */
+*/
+
 function unique_code_generator_creator() {
   $output = array(
     'form' => drupal_get_form('unique_code_generator_creator_form') ,
@@ -83,7 +85,8 @@ function unique_code_generator_creator() {
 }
 /*
  * form  caller
- */
+*/
+
 function unique_code_generator_codes() {
   $output = array(
     'form' => drupal_get_form('unique_code_generator_edit_codes_form') ,
@@ -110,7 +113,7 @@ function unique_code_generator_get_tokens() {
 
 function unique_code_generator_Random($type = 0, $case = 'mix', $length = 10) {
   
-  if ($type == 0) $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_-+=\\":><?/}{][.,~`';
+  if ($type == 0) $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_-+=\\':><?/}{][.,~`';
   else 
   if ($type == 1) $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   else 
@@ -144,19 +147,19 @@ function unique_code_generator_db_find($field, $value) {
 */
 
 function unique_code_generator_db_check_code($value) {
-  $record = db_select('unique_code_generator', 'c')->fields('c', array('uid'))
-  ->condition('code', $value, '=')->execute()
-  ->fetchAssoc();
+  $record = db_select('unique_code_generator', 'c')->fields('c', array(
+    'uid'
+  ))->condition('code', $value, '=')->execute()->fetchAssoc();
   return $record;
 }
 /*
-* Gets the id
+ * Gets the id
 */
 
 function unique_code_generator_db_get_id($value) {
-  $record = db_select('unique_code_generator', 'c')->fields('c', array('id'))
-  ->condition('code', $value, '=')->execute()
-  ->fetchAssoc();
+  $record = db_select('unique_code_generator', 'c')->fields('c', array(
+    'id'
+  ))->condition('code', $value, '=')->execute()->fetchAssoc();
   return $record;
 }
 /*
@@ -242,7 +245,8 @@ function unique_code_generator_settings_form($form, &$form_state) {
 }
 /*
  * Implements hook_form_submit().
- */
+*/
+
 function unique_code_generator_settings_form_submit($form, &$form_state) {
   $settings['before_string'] = $form_state['values']['before_string'];
   $settings['after_string'] = $form_state['values']['after_string'];
@@ -253,7 +257,8 @@ function unique_code_generator_settings_form_submit($form, &$form_state) {
 }
 /*
  * Implements hook_form().
- */
+*/
+
 function unique_code_generator_creator_form($form, &$form_state) {
   $settings = variable_get('unique_code_generator');
   global $user;
@@ -292,7 +297,7 @@ function unique_code_generator_creator_form($form, &$form_state) {
     $settings['after_string'] = token_replace($settings['after_string']);
   }
   
-  if (empty($form_state['values']['number_of_strings'])){
+  if (empty($form_state['values']['number_of_strings'])) {
     $form_state['values']['number_of_strings'] = 0;
   }
   $number = intval($form_state['values']['number_of_strings']);
@@ -305,7 +310,7 @@ function unique_code_generator_creator_form($form, &$form_state) {
   $form['results'] = array(
     '#type' => 'fieldset',
     '#title' => t('Results') ,
-    '#prefix' => '<div id="wrapper-gen">',
+    '#prefix' => '<div id='wrapper-gen'>',
     '#suffix' => '</div>',
   );
   
@@ -339,16 +344,18 @@ function unique_code_generator_creator_form($form, &$form_state) {
 }
 /*
  * Ajax Callback
- */
+*/
+
 function unique_code_generator_creator_callback($form, &$form_state) {
   return ($form['results']);
 }
 /*
  * Implements hook_form_submit().
- */
+*/
+
 function unique_code_generator_creator_form_submit($form, &$form_state) {
-  $message = t("Saved Values are :");
-  $saved = "<strong>" . $message . "</strong><ul>";
+  $message = t('Saved Values are :');
+  $saved = '<strong>' . $message . '</strong><ul>';
   
   if (!isset($user)) global $user;
   
@@ -366,12 +373,13 @@ function unique_code_generator_creator_form_submit($form, &$form_state) {
       }
     }
   }
-  $saved.= "</ul>";
+  $saved.= '</ul>';
   drupal_set_message($saved);
 }
 /*
  * Implements hook_form().
- */
+*/
+
 function unique_code_generator_edit_codes_form($form, &$form_state) {
   $form = array();
   global $user;
@@ -402,8 +410,7 @@ function unique_code_generator_edit_codes_form($form, &$form_state) {
     'uid',
     'created'
   ));
-  $table_sort = $query->extend('TableSort') 
-  ->orderByHeader($header);
+  $table_sort = $query->extend('TableSort')->orderByHeader($header);
   $pager = $table_sort->extend('PagerDefault')->limit(25);
   $result = $pager->execute();
   $rows = array();
@@ -436,8 +443,8 @@ function unique_code_generator_edit_codes_form($form, &$form_state) {
 }
 /*
  * Implements hook_form_submit().
- */
- 
+*/
+
 function unique_code_generator_edit_codes_form_submit($form, &$form_state) {
   $selected = array_filter($form_state['values']['table']);
   db_delete('unique_code_generator')->condition('id', $selected, 'IN')->execute();
