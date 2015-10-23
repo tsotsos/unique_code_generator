@@ -64,7 +64,7 @@ function unique_code_generator_menu($items) {
   return $items;
 }
 /*
- * form  caller
+ * Calls form for generator settings
 */
 
 function unique_code_generator_settings() {
@@ -74,7 +74,7 @@ function unique_code_generator_settings() {
   return $output;
 }
 /*
- * form  caller
+ * Calls form for creator
 */
 
 function unique_code_generator_creator() {
@@ -84,7 +84,7 @@ function unique_code_generator_creator() {
   return $output;
 }
 /*
- * form  caller
+ * Calls form for codes
 */
 
 function unique_code_generator_codes() {
