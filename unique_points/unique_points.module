@@ -61,6 +61,9 @@ function unique_points_menu($items) {
   );
   return $items;
 }
+/*
+ * Calls form for generator supervisor
+*/
 
 function unique_points_settings() {
   $output = array(
@@ -68,6 +71,9 @@ function unique_points_settings() {
   );
   return $output;
 }
+/*
+ * Calls form for redeem form
+*/
 
 function unique_points_redeem() {
   $output = array(
@@ -75,6 +81,9 @@ function unique_points_redeem() {
   );
   return $output;
 }
+/*
+ * Fetches captcha types (by Captch Module)
+*/
 
 function unique_points_captcha_types($add_special_options = TRUE) {
   $captcha_types = array();
@@ -101,6 +110,9 @@ function unique_points_captcha_types($add_special_options = TRUE) {
   }
   return $captcha_types;
 }
+/*
+ * Implements hook_form().
+*/
 
 function unique_points_supervisors_form($form, &$form_state) {
   $form = array();
@@ -138,6 +150,9 @@ function unique_points_supervisors_form($form, &$form_state) {
   );
   return $form;
 }
+/*
+ * Implements hook_submit().
+*/
 
 function unique_points_supervisors_form_submit($form, &$form_state) {
   
@@ -163,6 +178,9 @@ function unique_points_supervisors_form_submit($form, &$form_state) {
   ));
   drupal_set_message(t('All settings was saved!'));
 }
+/*
+ * Implements hook_form().
+*/
 
 function unique_points_codes_form($form, &$form_state) {
   $form = array();
@@ -233,6 +251,9 @@ function unique_points_codes_form($form, &$form_state) {
   );
   return $form;
 }
+/*
+ * Implements hook_form().
+*/
 
 function unique_points_redeem_form($form, &$form_state) {
   $form = array();
@@ -260,6 +281,9 @@ function unique_points_redeem_form($form, &$form_state) {
   );
   return $form;
 }
+/*
+ * Implements hook_submit().
+*/
 
 function unique_points_redeem_form_submit($form, &$form_state) {
   $username = isset($form_state['values']['username']) ? check_plain($form_state['values']['username']) : NULL;
