@@ -101,7 +101,7 @@ function unique_points_captcha_types($add_special_options = TRUE) {
     if (is_array($result)) {
       
       foreach ($result as $type) {
-        $captcha_types["$module/$type"] = t('@type (from module @module)', array(
+        $captcha_types['$module/$type'] = t('@type (from module @module)', array(
           '@type' => $type,
           '@module' => $module
         ));
